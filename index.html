@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER NOVIEMBRE - Gestión Operativa</title>
+    <style>
+        :root {
+            --bg-main: #0a0512;
+            --bg-card: #140b24;
+            --neon-magenta: #ff007f;
+            --neon-glow: 0 0 10px #ff007f, 0 0 20px #ff007f;
+            --neon-fuchsia: #d4007a;
+            --text-white: #ffffff;
+            --text-pink: #fbcfe8;
+            --color-green: #39ff14;
+            --color-yellow: #ffee00;
+            --color-red: #ff3131;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-white);
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-magenta);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px -10px var(--neon-magenta);
+            position: relative;
+        }
+
+        .header-title-area {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: var(--text-white);
+            text-shadow: var(--neon-glow);
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .date-control-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: var(--text-pink);
+        }
+
+        .date-control-wrapper input[type="date"] {
+            background: #25123e;
+            border: 1px solid var(--neon-magenta);
+            color: var(--text-white);
+            padding: 4px 8px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .status-loading { background: rgba(255, 238, 0, 0.1); border-color: var(--color-yellow); color: var(--color-yellow); }
+        .status-connected { background: rgba(57, 255, 20, 0.1); border-color: var(--color-green); color: var(--color-green); }
+        .status-error { background: rgba(255, 49, 49, 0.1); border-color: var(--color-red); color: var(--color-red); }
+
+        .navigation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #25123e;
+            color: var(--text-pink);
+            border: 1px solid #4a217a;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-btn.active-tab {
+            background: var(--neon-fuchsia);
+            color: var(--text-white);
+            border-color: var(--neon-magenta);
+            box-shadow: var(--neon-glow);
+        }
+
+        .app-view-panel {
+            display: none;
+        }
+
+        .app-view-panel.active-panel {
+            display: block;
+        }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--neon-magenta);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: inset 0 0 8px rgba(255, 0, 127, 0.08);
+        }
+
+        .kpi-title {
+            font-size: 0.8rem;
+            color: var(--text-pink);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            text-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+        }
+
+        select, button {
+            background: #25123e;
+            color: var(--text-white);
+            border: 1px solid var(--neon-magenta);
+            padding: 8px 10px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select { width: 100%; }
+        select:focus { box-shadow: 0 0 6px var(--neon-magenta); }
+
+        button {
+            background: var(--neon-fuchsia);
+            font-weight: bold;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            box-shadow: var(--neon-glow);
+            background: var(--neon-magenta);
+        }
+
+        button:disabled {
+            background: #2a163a;
+            border-color: #44245e;
+            color: #664385;
+            cursor: not-allowed;
+        }
+
+        .btn-lunch { background: #0066cc; border-color: #0088ff; }
+        .btn-lunch:hover:not(:disabled) { box-shadow: 0 0 8px #0088ff; background: #0088ff; }
+
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 1px solid #2d1947;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            display: none;
+        }
+
+        th {
+            background: #1b0d2d;
+            color: var(--text-pink);
+            border-bottom: 2px solid var(--neon-magenta);
+            padding: 12px;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #2d1947;
+            vertical-align: middle;
+        }
+
+        tr.row-absent {
+            background: rgba(255, 49, 49, 0.12) !important;
+        }
+
+        .row-absent select, .row-absent button {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .cards-container {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mobile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--neon-magenta);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .mobile-card.card-absent {
+            background: rgba(255, 49, 49, 0.12);
+            border-color: var(--color-red);
+        }
+
+        .card-header-name {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #2d1947;
+            padding-bottom: 6px;
+        }
+
+        .card-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .card-field label {
+            font-size: 0.75rem;
+            color: var(--text-pink);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .dash-box {
+            background: var(--bg-card);
+            border: 1px solid #4a217a;
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .dash-box-title {
+            font-size: 1rem;
+            color: var(--text-white);
+            border-bottom: 1px solid var(--neon-magenta);
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dash-table th {
+            background: #140b24;
+            padding: 8px;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #4a217a;
+        }
+
+        .dash-table td {
+            padding: 8px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #1f0f33;
+        }
+
+        .alert-list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #1f0f33;
+            font-size: 0.85rem;
+        }
+
+        .lunch-alert-warning { color: var(--color-yellow) !important; font-weight: bold; }
+        .lunch-alert-danger { color: var(--color-red) !important; font-weight: bold; animation: alert-flash 1s infinite alternate; }
+
+        @keyframes alert-flash {
+            from { text-shadow: 0 0 2px var(--color-red); }
+            to { text-shadow: 0 0 10px var(--color-red); }
+        }
+
+        @media (min-width: 769px) {
+            table { display: table; }
+            .cards-container { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            table { display: none; }
+            .cards-container { display: flex; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title-area">
+            <h1>Cyber Noviembre</h1>
+            <div class="date-control-wrapper">
+                <span>Operación del Día:</span>
+                <input type="date" id="dateSelector" onchange="cambiarFechaOperativa(this.value)">
+            </div>
+        </div>
+        <div id="connStatus" class="status-badge status-loading">Conectando...</div>
+    </header>
+
+    <div class="navigation-tabs">
+        <div id="tabAsistencia" class="tab-btn active-tab" onclick="switchTab('asistencia')">📋 Registro Asistencia</div>
+        <div id="tabDashboard" class="tab-btn" onclick="switchTab('dashboard')">📊 Resumen</div>
+    </div>
+
+    <div id="panelAsistencia" class="app-view-panel active-panel">
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <div class="kpi-title">Programados hoy</div>
+                <div class="kpi-value" id="kpiProgramados" style="color: var(--text-white);">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Activos en Piso</div>
+                <div class="kpi-value" id="kpiActivos" style="color: var(--color-green);">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">En Almuerzo</div>
+                <div class="kpi-value" id="kpiAlmuerzo" style="color: var(--color-yellow);">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Por Llegar</div>
+                <div class="kpi-value" id="kpiPorLlegar" style="color: var(--text-pink);">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ausencias</div>
+                <div class="kpi-value" id="kpiAusencias" style="color: var(--color-red);">0</div>
+            </div>
+        </div>
+
+        <div class="table-responsive-wrapper">
+            <table id="desktopTable">
+                <thead>
+                    <tr>
+                        <th>Trabajador</th>
+                        <th>Función</th>
+                        <th>Subfunción</th>
+                        <th>Asistencia</th>
+                        <th>Entrada</th>
+                        <th>Almuerzo (60 min)</th>
+                        <th>Salida</th>
+                        <th>Turno</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div id="cardsContainer" class="cards-container"></div>
+    </div>
+
+    <div id="panelDashboard" class="app-view-panel">
+        <div class="dashboard-grid">
+            
+            <div class="dash-box" style="grid-column: span 2;">
+                <div class="dash-box-title">Distribución de Personal en Piso (Activos / Programados)</div>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>Función Principal</th>
+                            <th>Subfunción / Ubicación</th>
+                            <th style="text-align: center;">En Piso Actual</th>
+                            <th style="text-align: center;">Total Programados</th>
+                            <th style="text-align: center;">Cobertura %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashMetricsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="dash-box">
+                <div class="dash-box-title" style="color: var(--text-pink);">⚠️ Presentes sin Entrada Real</div>
+                <div id="alertNoEntry" style="display: flex; flex-direction: column;"></div>
+            </div>
+
+            <div class="dash-box">
+                <div class="dash-box-title" style="color: var(--color-red);">🚨 Almuerzos Excedidos (+60 min)</div>
+                <div id="alertOverLunch" style="display: flex; flex-direction: column;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNswXWAEChDyYVKtQitY40qXCUZ8kNsn8eD2jP-LroAuQGlfg9GpACSrAMLDlM1mlhOowgUsbm3PBp/pub?gid=0&single=true&output=csv';
+
+        let staffRawData = [];
+        let currentSelectedDate = "";
+        let globalStorageStates = JSON.parse(localStorage.getItem('cyber_nov_states_v2')) || {};
+
+        function formatInputToSheetDate(dateStr) {
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return "";
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function getSystemDateInputFormat() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        const initialDate = getSystemDateInputFormat();
+        document.getElementById('dateSelector').value = initialDate;
+        currentSelectedDate = formatInputToSheetDate(initialDate);
+
+        function switchTab(target) {
+            document.getElementById('tabAsistencia').classList.remove('active-tab');
+            document.getElementById('tabDashboard').classList.remove('active-tab');
+            document.getElementById('panelAsistencia').classList.remove('active-panel');
+            document.getElementById('panelDashboard').classList.remove('active-panel');
+
+            if (target === 'asistencia') {
+                document.getElementById('tabAsistencia').classList.add('active-tab');
+                document.getElementById('panelAsistencia').classList.add('active-panel');
+            } else {
+                document.getElementById('tabDashboard').classList.add('active-tab');
+                document.getElementById('panelDashboard').classList.add('active-panel');
+                renderDashboardMetrics();
+            }
+        }
+
+        function cambiarFechaOperativa(newDateVal) {
+            currentSelectedDate = formatInputToSheetDate(newDateVal);
+            processSheetPayload(staffRawData);
+        }
+
+        async function loadSheetEngine() {
+            const statusBadge = document.getElementById('connStatus');
+            try {
+                const response = await fetch(CSV_URL);
+                if (!response.ok) throw new Error('Network error');
+                const rawText = await response.text();
+                
+                staffRawData = rawText.split(/\r?\n/).map(line => line.split(','));
+                
+                statusBadge.className = "status-badge status-connected";
+                statusBadge.innerText = "Conectado ✔";
+                
+                processSheetPayload(staffRawData);
+            } catch (err) {
+                statusBadge.className = "status-badge status-error";
+                statusBadge.innerText = "Error Conexión ❌";
+                console.error(err);
+            }
+        }
+
+        function processSheetPayload(matrix) {
+            if (matrix.length < 2) return;
+
+            const headerDatesRow = matrix[1]; 
+            let dateColIndex = -1;
+
+            for (let i = 0; i < headerDatesRow.length; i++) {
+                if (headerDatesRow[i].trim() === currentSelectedDate) {
+                    dateColIndex = i;
+                    break;
+                }
+            }
+
+            const tableBody = document.getElementById('tableBody');
+            const cardsContainer = document.getElementById('cardsContainer');
+            tableBody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            if (dateColIndex === -1) {
+                document.getElementById('connStatus').className = "status-badge status-loading";
+                document.getElementById('connStatus').innerText = "Sin horario hoy";
+                calculateKPIs([]);
+                return;
+            } else {
+                document.getElementById('connStatus').className = "status-badge status-connected";
+                document.getElementById('connStatus').innerText = "Conectado ✔";
+            }
+
+            let filteredStaff = [];
+
+            for (let r = 2; r < matrix.length; r++) {
+                const row = matrix[r];
+                if (!row || row.length <= dateColIndex) continue;
+
+                const name = row[0] ? row[0].trim() : "";
+                const area = row[1] ? row[1].trim() : "";
+                const schedule = row[dateColIndex] ? row[dateColIndex].trim() : "";
+
+                if (!name || schedule === "Libre" || schedule === "LIC") {
+                    continue;
+                }
+
+                const uniqueId = `uid_${currentSelectedDate.replace(/\//g,'_')}_${name.replace(/\s+/g,'_')}`;
+                filteredStaff.push({
+                    id: uniqueId,
+                    nombre: name,
+                    area: area,
+                    turno: schedule
+                });
+            }
+
+            buildInterfaceElements(filteredStaff);
+        }
+
+        function getSubfunctionStructure(func) {
+            if (func === 'PICKER') return ['Piso 1', 'Piso 2', 'Piso 3', 'Piso 4'];
+            if (func === 'EVENTO') return ['Empaque', 'Desempiochado', 'Etiquetado', 'Impresión'];
+            if (func === 'RET') return ['Runner', 'Front'];
+            return ['No aplica'];
+        }
+
+        function resolvePersonalState(id, area) {
+            if (!globalStorageStates[id]) {
+                globalStorageStates[id] = {
+                    asistencia: 'Espera',
+                    funcion: area === 'Evento' ? 'EVENTO' : 'PICKER',
+                    subfuncion: area === 'Evento' ? 'Empaque' : 'Piso 1',
+                    horaEntrada: '',
+                    horaSalida: '',
+                    lunchStatus: 'ready',
+                    lunchStart: null,
+                    lunchElapsed: 0
+                };
+                saveToLocalStorage();
+            }
+            return globalStorageStates[id];
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('cyber_nov_states_v2', JSON.stringify(globalStorageStates));
+        }
+
+        let activeVisibleStaff = [];
+        
+        function buildInterfaceElements(staffList) {
+            activeVisibleStaff = staffList;
+            const tableBody = document.getElementById('tableBody');
+            const cardsContainer = document.getElementById('cardsContainer');
+            
+            tableBody.innerHTML = '';
+            cardsContainer.innerHTML = '';
+
+            staffList.forEach(worker => {
+                const state = resolvePersonalState(worker.id, worker.area);
+                const isAbsent = state.asistencia === 'Faltó';
+
+                const tr = document.createElement('tr');
+                if (isAbsent) tr.className = 'row-absent';
+
+                tr.innerHTML = `
+                    <td style="font-weight: bold; color: var(--text-white);">${worker.nombre}</td>
+                    <td>
+                        <select onchange="cambiarFuncion('${worker.id}', this.value)">
+                            <option value="PICKER" ${state.funcion === 'PICKER' ? 'selected' : ''}>PICKER</option>
+                            <option value="EVENTO" ${state.funcion === 'EVENTO' ? 'selected' : ''}>EVENTO</option>
+                            <option value="RET" ${state.funcion === 'RET' ? 'selected' : ''}>RET</option>
+                            <option value="EMPAQUE" ${state.funcion === 'EMPAQUE' ? 'selected' : ''}>EMPAQUE</option>
+                            <option value="ESCANEO" ${state.funcion === 'ESCANEO' ? 'selected' : ''}>ESCANEO</option>
+                            <option value="LIDER" ${state.funcion === 'LIDER' ? 'selected' : ''}>LIDER</option>
+                            <option value="PERFUMERIA" ${state.funcion === 'PERFUMERIA' ? 'selected' : ''}>PERFUMERIA</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select id="sub_table_${worker.id}" onchange="cambiarSubfuncion('${worker.id}', this.value)">
+                            ${getSubfunctionStructure(state.funcion).map(opt => `<option value="${opt}" ${state.subfuncion === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <select onchange="cambiarAsistencia('${worker.id}', this.value)">
+                            <option value="Espera" ${state.asistencia === 'Espera' ? 'selected' : ''}>Espera</option>
+                            <option value="Presente" ${state.asistencia === 'Presente' ? 'selected' : ''}>Presente</option>
+                            <option value="Faltó" ${state.asistencia === 'Faltó' ? 'selected' : ''}>Faltó</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button ${state.asistencia !== 'Presente' || state.horaEntrada ? 'disabled' : ''} onclick="marcarEntrada('${worker.id}')">
+                            ${state.horaEntrada ? state.horaEntrada : 'MARCAR'}
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-lunch" id="lunch_btn_table_${worker.id}" ${state.asistencia !== 'Presente' || !state.horaEntrada || state.horaSalida ? 'disabled' : ''} onclick="ejecutarAlmuerzo('${worker.id}')">
+                            ${renderLunchLabel(state)}
+                        </button>
+                        <span id="timer_table_${worker.id}" style="margin-left: 6px; font-family: monospace;"></span>
+                    </td>
+                    <td>
+                        <button ${state.asistencia !== 'Presente' || !state.horaEntrada || state.horaSalida ? 'disabled' : ''} onclick="marcarSalida('${worker.id}')">
+                            ${state.horaSalida ? state.horaSalida : 'MARCAR'}
+                        </button>
+                    </td>
+                    <td style="color: var(--text-pink); font-size: 0.85rem; font-family: monospace; white-space: nowrap;">${worker.turno}</td>
+                `;
+                tableBody.appendChild(tr);
+
+                const card = document.createElement('div');
+                card.className = `mobile-card ${isAbsent ? 'card-absent' : ''}`;
+
+                card.innerHTML = `
+                    <div class="card-header-name">${worker.nombre}</div>
+                    
+                    <div class="card-field">
+                        <label>Función Principal</label>
+                        <select onchange="cambiarFuncion('${worker.id}', this.value)">
+                            <option value="PICKER" ${state.funcion === 'PICKER' ? 'selected' : ''}>PICKER</option>
+                            <option value="EVENTO" ${state.funcion === 'EVENTO' ? 'selected' : ''}>EVENTO</option>
+                            <option value="RET" ${state.funcion === 'RET' ? 'selected' : ''}>RET</option>
+                            <option value="EMPAQUE" ${state.funcion === 'EMPAQUE' ? 'selected' : ''}>EMPAQUE</option>
+                            <option value="ESCANEO" ${state.funcion === 'ESCANEO' ? 'selected' : ''}>ESCANEO</option>
+                            <option value="LIDER" ${state.funcion === 'LIDER' ? 'selected' : ''}>LIDER</option>
+                            <option value="PERFUMERIA" ${state.funcion === 'PERFUMERIA' ? 'selected' : ''}>PERFUMERIA</option>
+                        </select>
+                    </div>
+
+                    <div class="card-field">
+                        <label>Subfunción / Ubicación</label>
+                        <select id="sub_card_${worker.id}" onchange="cambiarSubfuncion('${worker.id}', this.value)">
+                            ${getSubfunctionStructure(state.funcion).map(opt => `<option value="${opt}" ${state.subfuncion === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div class="card-field">
+                        <label>Estado Asistencia</label>
+                        <select onchange="cambiarAsistencia('${worker.id}', this.value)">
+                            <option value="Espera" ${state.asistencia === 'Espera' ? 'selected' : ''}>Espera</option>
+                            <option value="Presente" ${state.asistencia === 'Presente' ? 'selected' : ''}>Presente</option>
+                            <option value="Faltó" ${state.asistencia === 'Faltó' ? 'selected' : ''}>Faltó</option>
+                        </select>
+                    </div>
+
+                    <div style="${isAbsent ? 'display:none;' : 'display:block;'}">
+                        <div class="card-field">
+                            <label>Control Entrada</label>
+                            <button ${state.asistencia !== 'Presente' || state.horaEntrada ? 'disabled' : ''} onclick="marcarEntrada('${worker.id}')">
+                                ${state.horaEntrada ? `Registrado: ${state.horaEntrada}` : 'MARCAR ENTRADA'}
+                            </button>
+                        </div>
+
+                        <div class="card-field">
+                            <label>Break Almuerzo</label>
+                            <button class="btn-lunch" id="lunch_btn_card_${worker.id}" ${state.asistencia !== 'Presente' || !state.horaEntrada || state.horaSalida ? 'disabled' : ''} onclick="ejecutarAlmuerzo('${worker.id}')">
+                                ${renderLunchLabel(state)}
+                            </button>
+                            <div id="timer_card_${worker.id}" style="text-align: center; margin-top: 4px; font-family: monospace;"></div>
+                        </div>
+
+                        <div class="card-field">
+                            <label>Control Salida</label>
+                            <button ${state.asistencia !== 'Presente' || !state.horaEntrada || state.horaSalida ? 'disabled' : ''} onclick="marcarSalida('${worker.id}')">
+                                ${state.horaSalida ? `Registrado: ${state.horaSalida}` : 'MARCAR SALIDA'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-field">
+                        <label>Turno Programado Original</label>
+                        <div style="font-family: monospace; font-size:0.9rem; color:var(--text-pink);">${worker.turno}</div>
+                    </div>
+                `;
+                cardsContainer.appendChild(card);
+            });
+
+            calculateKPIs(staffList);
+        }
+
+        function renderLunchLabel(state) {
+            if (state.lunchStatus === 'ready') return 'SALIR ALMUERZO';
+            if (state.lunchStatus === 'eating') return 'VOLVER ALMUERZO';
+            return `CONCLUIDO (${state.lunchElapsed} Min)`;
+        }
+
+        function cambiarAsistencia(id, val) {
+            globalStorageStates[id].asistencia = val;
+            if (val !== 'Presente') {
+                globalStorageStates[id].horaEntrada = '';
+                globalStorageStates[id].horaSalida = '';
+                globalStorageStates[id].lunchStatus = 'ready';
+                globalStorageStates[id].lunchStart = null;
+                globalStorageStates[id].lunchElapsed = 0;
+            }
+            saveToLocalStorage();
+            buildInterfaceElements(activeVisibleStaff);
+        }
+
+        function cambiarFuncion(id, val) {
+            globalStorageStates[id].funcion = val;
+            const opcionesNuevas = getSubfunctionStructure(val);
+            globalStorageStates[id].subfuncion = opcionesNuevas[0]; 
+            saveToLocalStorage();
+
+            buildInterfaceElements(activeVisibleStaff);
+        }
+
+        function cambiarSubfuncion(id, val) {
+            globalStorageStates[id].subfuncion = val;
+            saveToLocalStorage();
+        }
+
+        function marcarEntrada(id) {
+            const time = new Date();
+            globalStorageStates[id].horaEntrada = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+            saveToLocalStorage();
+            buildInterfaceElements(activeVisibleStaff);
+        }
+
+        function marcarSalida(id) {
+            const time = new Date();
+            globalStorageStates[id].horaSalida = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+            saveToLocalStorage();
+            buildInterfaceElements(activeVisibleStaff);
+        }
+
+        function ejecutarAlmuerzo(id) {
+            const state = globalStorageStates[id];
+            if (state.lunchStatus === 'ready') {
+                state.lunchStatus = 'eating';
+                state.lunchStart = Date.now();
+            } else if (state.lunchStatus === 'eating') {
+                state.lunchStatus = 'done';
+                state.lunchElapsed = Math.floor((Date.now() - state.lunchStart) / 60000);
+                state.lunchStart = null;
+            }
+            saveToLocalStorage();
+            buildInterfaceElements(activeVisibleStaff);
+        }
+
+        function calculateKPIs(staffList) {
+            let programados = staffList.length;
+            let activos = 0;
+            let almuerzo = 0;
+            let porLlegar = 0;
+            let ausencias = 0;
+
+            staffList.forEach(w => {
+                const state = globalStorageStates[w.id];
+                if (!state) return;
+
+                if (state.asistencia === 'Espera') {
+                    porLlegar++;
+                } else if (state.asistencia === 'Faltó') {
+                    ausencias++;
+                } else if (state.asistencia === 'Presente') {
+                    if (!state.horaEntrada) {
+                        porLlegar++;
+                    } else if (state.lunchStatus === 'eating') {
+                        almuerzo++; 
+                    } else if (state.horaSalida) {
+                        // Terminó
+                    } else {
+                        activos++;
+                    }
+                }
+            });
+
+            document.getElementById('kpiProgramados').innerText = programados;
+            document.getElementById('kpiActivos').innerText = activos;
+            document.getElementById('kpiAlmuerzo').innerText = almuerzo;
+            document.getElementById('kpiPorLlegar').innerText = porLlegar;
+            document.getElementById('kpiAusencias').innerText = ausencias;
+        }
+
+        function renderDashboardMetrics() {
+            const metricsBody = document.getElementById('dashMetricsBody');
+            const alertNoEntryContainer = document.getElementById('alertNoEntry');
+            const alertOverLunchContainer = document.getElementById('alertOverLunch');
+
+            metricsBody.innerHTML = '';
+            alertNoEntryContainer.innerHTML = '';
+            alertOverLunchContainer.innerHTML = '';
+
+            let matrixMap = {};
+
+            activeVisibleStaff.forEach(w => {
+                const state = globalStorageStates[w.id];
+                if (!state) return;
+
+                const func = state.funcion;
+                const subfunc = state.subfuncion || "No aplica";
+
+                if (!matrixMap[func]) matrixMap[func] = {};
+                if (!matrixMap[func][subfunc]) {
+                    matrixMap[func][subfunc] = { programados: 0, activos: 0 };
+                }
+
+                matrixMap[func][subfunc].programados++;
+
+                if (state.asistencia === 'Presente' && state.horaEntrada && state.lunchStatus !== 'eating' && !state.horaSalida) {
+                    matrixMap[func][subfunc].activos++;
+                }
+
+                if (state.asistencia === 'Presente' && !state.horaEntrada) {
+                    const item = document.createElement('div');
+                    item.className = 'alert-list-item';
+                    item.innerHTML = `<span style="font-weight:bold;">${w.nombre}</span><span style="color:var(--text-pink); font-size:0.8rem;">[${func}]</span>`;
+                    alertNoEntryContainer.appendChild(item);
+                }
+            });
+
+            let hasRows = false;
+            for (const func in matrixMap) {
+                for (const subfunc in matrixMap[func]) {
+                    hasRows = true;
+                    const data = matrixMap[func][subfunc];
+                    const pct = data.programados > 0 ? Math.round((data.activos / data.programados) * 100) : 0;
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:bold; color:var(--text-white);">${func}</td>
+                        <td style="color:var(--text-pink);">${subfunc}</td>
+                        <td style="text-align:center; font-weight:bold; color:var(--color-green);">${data.activos}</td>
+                        <td style="text-align:center; color:var(--text-white);">${data.programados}</td>
+                        <td style="text-align:center; font-weight:bold; color: var(--neon-magenta);">${pct}%</td>
+                    `;
+                    metricsBody.appendChild(tr);
+                }
+            }
+
+            if (!hasRows) {
+                metricsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-pink);">Sin datos operativos para mostrar hoy.</td></tr>`;
+            }
+            if (alertNoEntryContainer.children.length === 0) {
+                alertNoEntryContainer.innerHTML = `<div style="color:var(--color-green); font-size:0.85rem; padding:5px;">Todo el personal presente tiene su entrada registrada ✔</div>`;
+            }
+            
+            evaluarComedoresExcedidosDashboard();
+        }
+
+        function evaluarComedoresExcedidosDashboard() {
+            const container = document.getElementById('alertOverLunch');
+            container.innerHTML = '';
+            let count = 0;
+
+            activeVisibleStaff.forEach(w => {
+                const state = globalStorageStates[w.id];
+                if (state && state.lunchStatus === 'eating' && state.lunchStart) {
+                    const mins = Math.floor((Date.now() - state.lunchStart) / 60000);
+                    if (mins >= 60) {
+                        count++;
+                        const item = document.createElement('div');
+                        item.className = 'alert-list-item';
+                        item.innerHTML = `
+                            <span style="font-weight:bold; color:var(--color-red);">${w.nombre}</span>
+                            <span class="${mins >= 65 ? 'lunch-alert-danger' : 'lunch-alert-warning'}">${mins} Min transcurridos</span>
+                        `;
+                        container.appendChild(item);
+                    }
+                }
+            });
+
+            if (count === 0) {
+                container.innerHTML = `<div style="color:var(--color-green); font-size:0.85rem; padding:5px;">Ningún almuerzo excedido en este momento ✔</div>`;
+            }
+        }
+
+        setInterval(() => {
+            activeVisibleStaff.forEach(w => {
+                const state = globalStorageStates[w.id];
+                if (state && state.lunchStatus === 'eating' && state.lunchStart) {
+                    const transcurridoSegs = Math.floor((Date.now() - state.lunchStart) / 1000);
+                    const mins = Math.floor(transcurridoSegs / 60);
+                    const segs = transcurridoSegs % 60;
+                    const formatString = `${String(mins).padStart(2,'0')}:${String(segs).padStart(2,'0')} min`;
+
+                    const elTable = document.getElementById(`timer_table_${w.id}`);
+                    const elCard = document.getElementById(`timer_card_${w.id}`);
+
+                    [elTable, elCard].forEach(el => {
+                        if (el) {
+                            el.innerText = formatString;
+                            el.className = '';
+                            if (mins >= 65) {
+                                el.classList.add('lunch-alert-danger');
+                            } else if (mins >= 60) {
+                                el.classList.add('lunch-alert-warning');
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (document.getElementById('panelDashboard').classList.contains('active-panel')) {
+                evaluarComedoresExcedidosDashboard();
+            }
+        }, 1000);
+
+        loadSheetEngine();
+    </script>
+</body>
+</html>
